@@ -33,77 +33,134 @@ def buscar_historial_cliente(cedula):
     try:
         df_bd = pd.read_excel(BD_PATH)
         df_bd.columns = df_bd.columns.str.strip().str.upper()
-        cliente = df_bd[df_bd['ID_CLIENTE'].astype(str) == str(cedula)]
+        
+        target_col = 'ID_CLIENTE'
+        if target_col not in df_bd.columns:
+            print(f"Alerta: No se encontró la columna {target_col}. Columnas detectadas: {list(df_bd.columns)}")
+            return {'dias_desde_ultimo_credito': 9999, 'num_creditos_totales': 0, 'es_cliente_nuevo': True}
+
+        df_bd[target_col] = df_bd[target_col].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+        cedula_str = str(cedula).replace('.0', '').strip()
+        
+        cliente = df_bd[df_bd[target_col] == cedula_str]
         
         if cliente.empty:
+            print(f"🔍 Buscando cédula: '{cedula_str}' -> No encontrada en BD.")
             return {'dias_desde_ultimo_credito': 9999, 'num_creditos_totales': 0, 'es_cliente_nuevo': True}
         
         num_creditos = len(cliente)
-        col_fecha = 'FECHA' if 'FECHA' in df_bd.columns else 'FECHA_CREDITO'
-        if col_fecha in cliente.columns:
+        
+        col_fecha = next((c for c in ['FECHA', 'FECHA_CREDITO', 'FECHA_DESEMBOLSO'] if c in df_bd.columns), None)
+        
+        if col_fecha:
             ultima_fecha = pd.to_datetime(cliente[col_fecha]).max()
             dias_desde_ultimo = (datetime.now() - ultima_fecha).days
         else:
-            dias_desde_ultimo = 9999
-        return {'dias_desde_ultimo_credito': dias_desde_ultimo, 'num_creditos_totales': num_creditos, 'es_cliente_nuevo': False}
+            dias_desde_ultimo = 999999
+
+        print(f"¡Cliente encontrado! Cédula: {cedula_str} | Créditos: {num_creditos}")
+        return {
+            'dias_desde_ultimo_credito': int(dias_desde_ultimo),
+            'num_creditos_totales': int(num_creditos),
+            'es_cliente_nuevo': False
+        }
+        
     except Exception as e:
+        print(f"Error en buscar_historial_cliente: {e}")
         return {'dias_desde_ultimo_credito': 9999, 'num_creditos_totales': 0, 'es_cliente_nuevo': True}
 
+PAGADURIAS_PENSION = {'COLPENSIONES', 'ARP POSITIVA', 'FOPEP', 'FIDUPREVISORA', 'EJERCITO NACIONAL'}
+
+def evaluar_reglas_negocio(edad, monto, plazo, tipo, pagaduria):
+    # Simplificación de tus funciones de elegibilidad para la API
+    resultados = {}
+    
+    # 1. Business Integrals
+    razones_b = []
+    if edad < 18 or edad > 84: razones_b.append(f"Edad {edad} fuera de rango (18-84)")
+    if tipo != 'REFINANCIACION' and plazo < 49: razones_b.append(f"Plazo {plazo}m insuficiente para crédito nuevo")
+    # ... (puedes copiar el resto de la lógica de _elegibilidad_business aquí)
+    resultados['BUSINESS'] = {'ok': len(razones_b) == 0, 'razones': razones_b}
+
+    # 2. ExcelCredit
+    razones_e = []
+    if edad < 20 or edad > 81: razones_e.append(f"Edad {edad} fuera de rango (20-81)")
+    if monto < 1500000: razones_e.append("Monto menor al mínimo $1.5M")
+    resultados['EXCELCREDIT'] = {'ok': len(razones_e) == 0, 'razones': razones_e}
+
+    # 3. Coops Pensión (COPFINANCIAR, PRONALCREDIT, COOPIDESARROLLO)
+    razones_p = []
+    pag_ok = any(p in pagaduria.upper() for p in PAGADURIAS_PENSION)
+    if not pag_ok: razones_p.append("Pagaduría no cubierta (requiere pensión pública)")
+    if edad > 75: razones_p.append("Edad supera máximo de 75 años")
+    
+    res_p = {'ok': len(razones_p) == 0, 'razones': razones_p}
+    resultados['COPFINANCIAR'] = res_p
+    resultados['PRONALCREDIT'] = res_p
+    resultados['COOPIDESARROLLO'] = res_p
+    
+    return resultados
+
 def predecir_oportunidad(datos_chatbot, historial):
-    # --- MODELO 1 ---
-    df1 = pd.DataFrame([{
-        'dias_desde_ultimo_credito': historial['dias_desde_ultimo_credito'],
-        'MONTO': float(datos_chatbot['monto']),
-        'PLAZO': float(datos_chatbot['plazo']),
-        'num_creditos_totales': historial['num_creditos_totales'],
-        'EDAD_AL_PRESTAMO': float(datos_chatbot.get('edad', 0))
-    }])
-    df1 = df1[['dias_desde_ultimo_credito', 'MONTO', 'PLAZO', 'num_creditos_totales', 'EDAD_AL_PRESTAMO']]
-    prob_aprobacion = m1.predict_proba(df1)[0][1]
-
-    # --- MODELO 2 ---
-    def safe_encode(encoder, valor):
-        try:
-            # OrdinalEncoder espera un array 2D
-            return encoder.transform([[str(valor).upper().strip()]])[0][0]
-        except:
-            return 0.0 
-
-    df2 = pd.DataFrame([{
-        'EDAD_AL_PRESTAMO': float(datos_chatbot.get('edad', 0)),
-        'MONTO': float(datos_chatbot['monto']),
-        'PLAZO': float(datos_chatbot['plazo']),
-        'TIPO DE CREDITO': safe_encode(oe_tipo, datos_chatbot.get('tipo_credito', 'OTROS')),
-        'PAGADURIA': safe_encode(oe_pag, datos_chatbot.get('pagaduria', 'OTROS'))
-    }])
-    df2 = df2[['EDAD_AL_PRESTAMO', 'MONTO', 'PLAZO', 'TIPO DE CREDITO', 'PAGADURIA']]
-    
-    if scaler_m2:
-        df2_final = scaler_m2.transform(df2)
-    else:
-        df2_final = df2
-
-    pred_idx = m2.predict(df2_final)[0]
-    
-    # Traducir índice a Cooperativa
     try:
-        coop_nombre = le_target.inverse_transform([pred_idx])[0]
-    except:
-        coop_nombre = f"ID: {pred_idx}"
-    
-    try:
-        prob_m2 = np.max(m2.predict_proba(df2_final)[0])
-    except:
-        prob_m2 = 0.5
+        edad = float(datos_chatbot.get('edad', 0))
+        monto = float(datos_chatbot.get('monto', 0))
+        plazo = float(datos_chatbot.get('plazo', 0))
+        tipo = str(datos_chatbot.get('tipo_credito', 'OTROS')).upper().strip()
+        pag = str(datos_chatbot.get('pagaduria', 'OTROS')).upper().strip()
 
-    score_final = (prob_aprobacion * 0.7 + prob_m2 * 0.3) * 100
+        # --- ETAPA 1: REGLAS DE NEGOCIO ---
+        analisis_reglas = evaluar_reglas_negocio(edad, monto, plazo, tipo, pag)
+        
+        # --- ETAPA 2: MACHINE LEARNING ---
+        # Creamos DataFrames para evitar los UserWarnings de sklearn
+        def safe_encode(encoder, valor, col_name):
+            try:
+                temp_df = pd.DataFrame([valor], columns=[col_name])
+                return encoder.transform(temp_df)[0][0]
+            except:
+                return 0.0
 
-    return {
-        'score_prioridad': round(score_final, 2),
-        'prob_aprobacion': round(prob_aprobacion * 100, 2),
-        'cooperativa': coop_nombre,
-        'confianza_coop': round(prob_m2 * 100, 2)
-    }
+        tipo_encoded = safe_encode(oe_tipo, tipo, 'TIPO DE CREDITO')
+        pag_encoded = safe_encode(oe_pag, pag, 'PAGADURIA')
+
+        df2 = pd.DataFrame([[edad, monto, plazo, tipo_encoded, pag_encoded]], 
+                           columns=['EDAD_AL_PRESTAMO', 'MONTO', 'PLAZO', 'TIPO DE CREDITO', 'PAGADURIA'])
+        
+        X_input = scaler_m2.transform(df2) if scaler_m2 else df2
+        probs = m2.predict_proba(X_input)[0]
+        clases = le_target.classes_
+
+        ranking = []
+        for i, coop in enumerate(clases):
+            regla = analisis_reglas.get(coop, {'ok': True, 'razones': []})
+            ranking.append({
+                'cooperativa': str(coop),
+                'prob_ml': round(float(probs[i]) * 100, 2),
+                'elegible_reglas': regla['ok'],
+                'razones_rechazo': regla['razones']
+            })
+
+        ranking = sorted(ranking, key=lambda x: x['prob_ml'], reverse=True)
+        
+        # Modelo 1
+        df1 = pd.DataFrame([[historial['dias_desde_ultimo_credito'], monto, plazo, historial['num_creditos_totales'], edad]],
+                           columns=['dias_desde_ultimo_credito', 'MONTO', 'PLAZO', 'num_creditos_totales', 'EDAD_AL_PRESTAMO'])
+        prob_aprob = m1.predict_proba(df1)[0][1]
+
+        # Evitar el error '1' (KeyError) si ranking falla
+        mejor_elegible = next((c for c in ranking if c['elegible_reglas']), None)
+        if mejor_elegible is None and len(ranking) > 0:
+            mejor_elegible = ranking[0]
+
+        return {
+            'prob_aprobacion': round(float(prob_aprob) * 100, 2),
+            'ranking_cooperativas': ranking,
+            'mejor_opcion_elegible': mejor_elegible
+        }
+    except Exception as e:
+        print(f"Error dentro de predecir_oportunidad: {e}")
+        raise e
 
 # ===== ENDPOINTS =====
 
@@ -116,35 +173,50 @@ def evaluar_desde_archivo():
         
         with open(path_archivo, 'r') as f:
             lineas = f.readlines()
-            # CORRECCIÓN AQUÍ: usamos el módulo json estándar
             datos = json.loads(lineas[-1]) 
             
         historial = buscar_historial_cliente(datos['cedula'])
+        
         res = predecir_oportunidad(datos, historial)
         
-        # === IMPRESIÓN EN TERMINAL ===
-        print("\n" + "═"*60)
-        print("              RESUMEN DE EVALUACIÓN DE PROSPECTO")
-        print("═"*60)
-        print(f"PROSPECTO:      {datos.get('nombre', 'N/A').upper()}")
-        print(f"CÉDULA:         {datos.get('cedula', 'N/A')}")
-        print(f"EDAD:           {datos.get('edad', 'N/A')} años")
-        print(f"PAGADURÍA:      {datos.get('pagaduria', 'N/A').upper()}")
-        print(f"CLIENTE NUEVO:  {'SÍ' if historial['es_cliente_nuevo'] else 'NO'}")
-        print("─"*60)
-        print(f"PROB. APROBACIÓN: {res['prob_aprobacion']}%")
-        print(f"COOPERATIVA SUGERIDA:  {res['cooperativa']}")
-        print(f"CONFIANZA ASIGNACIÓN:  {res['confianza_coop']}%")
-        print("─"*60)
-        print(f"SCORE DE PRIORIDAD:    {res['score_prioridad']}%")
-        print(f"CONTACTO CELULAR:      {datos.get('celular', 'No suministrado')}")
-        print("═"*60 + "\n")
-            
-        return jsonify({
-            'status': 'exitoso',
-            'prospecto': datos.get('nombre'),
-            'analisis': res
-        }), 200
+        print("\n" + "═"*70)
+        print("            FICHA TÉCNICA Y REGLAS DE NEGOCIO")
+        print("═"*70)
+        
+        nombre = str(datos.get('nombre', 'N/A')).upper()
+        cedula = datos.get('cedula', 'N/A')
+        pagaduria = str(datos.get('pagaduria', 'N/A')).upper()
+        edad = datos.get('edad', 'N/A')
+        
+        print(f"CLIENTE: {nombre} | CÉDULA: {cedula}")
+        print(f"PAGADURÍA: {pagaduria} | EDAD: {edad}")
+        
+        # --- LÓGICA DE CLIENTE NUEVO O ANTIGUO ---
+        if historial['es_cliente_nuevo']:
+            print(f"ESTADO: CLIENTE NUEVO (Sin historial en BD)")
+        else:
+            print(f"ESTADO: CLIENTE ANTIGUO")
+            print(f"   └─ Créditos totales: {historial['num_creditos_totales']}")
+            print(f"   └─ Días desde último crédito: {historial['dias_desde_ultimo_credito']} días")
+        
+        print("─"*70)
+        print(f"VIABILIDAD DE CRÉDITO (M1): {res['prob_aprobacion']}%")
+        print("\nANÁLISIS POR COOPERATIVA (Ranking ML):")
+        
+        for i, item in enumerate(res['ranking_cooperativas'][:3], 1):
+            status = "ELEGIBLE" if item['elegible_reglas'] else "NO ELEGIBLE"
+            print(f"{i}. {item['cooperativa']:<18} | Confianza: {item['prob_ml']}% | {status}")
+            if not item['elegible_reglas']:
+                for razon in item['razones_rechazo']:
+                    print(f"   └─ MOTIVO: {razon}")
+        
+        print("─"*70)
+        print(f"CONTACTO: {datos.get('celular', 'N/A')}")
+        print("═"*70 + "\n")
+        
+        res['historial_cliente'] = historial
+        
+        return jsonify({'status': 'procesado', 'resultados': res}), 200
 
     except Exception as e:
         print(f"Error en el proceso: {e}")

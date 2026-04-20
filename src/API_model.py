@@ -12,7 +12,7 @@ app = Flask(__name__)
 BASE_DIR = '/Users/estefania/Documents/proyecto IA Apoyo Crediticio'
 BD_PATH = os.path.join(BASE_DIR, 'data/bd_IA.xlsx')
 MODELO1_PATH = os.path.join(BASE_DIR, 'modelos/modelo1_random_forest.pkl')
-MODELO2_PATH = os.path.join(BASE_DIR, 'modelos/modelo2_Gradient_Boosting.pkl')
+MODELO2_PATH = os.path.join(BASE_DIR, 'modelos/modelo2_XGBoost.pkl')
 
 # ===== CARGA DE MODELOS Y COMPONENTES =====
 try:

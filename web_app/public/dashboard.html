@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apoyo Crediticio — Panel de Asesores</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="./css/dashboard.css">
+
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">AC</div>
+    <div class="logo-text">
+      Apoyo Crediticio
+      <span>Panel de Asesores</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="badge-total" id="badge-total">0 clientes activos</span>
+    <button class="btn-refresh" onclick="cargarClientes()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Actualizar
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">En cola</div>
+      <div class="stat-value" id="stat-cola">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Alta viabilidad (&gt;70%)</div>
+      <div class="stat-value green" id="stat-alta">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Media (40–70%)</div>
+      <div class="stat-value gold" id="stat-media">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Casos cerrados</div>
+      <div class="stat-value" id="stat-cerrados">—</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <h2>Cola de clientes</h2>
+    <input class="search-input" id="search-input" type="text"
+           placeholder="Buscar nombre o cédula…" oninput="filtrarTarjetas()">
+    <select class="filter-select" id="filter-select" onchange="filtrarTarjetas()">
+      <option value="all">Todos</option>
+      <option value="high">Alta viabilidad</option>
+      <option value="medium">Media viabilidad</option>
+      <option value="low">Baja viabilidad</option>
+    </select>
+    <button class="toggle-cerrados" id="toggle-cerrados" onclick="toggleCerrados()">
+      Mostrar cerrados
+    </button>
+  </div>
+
+  <div id="cards-container">
+    <div class="loader-wrap" id="initial-msg">
+      <div class="empty-icon">⚙️</div>
+      <div class="loader-text">Cargando la información de los clientes...</div>
+    </div>
+  </div>
+
+</main>
+
+<div class="modal-overlay" id="modal-overlay" onclick="cerrarModalSiFondo(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-nombre">—</div>
+        <div class="modal-subtitle" id="modal-cedula-sub">—</div>
+      </div>
+      <button class="btn-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="loader-wrap"><div class="spinner"></div><div class="loader-text">Consultando modelos…</div></div>
+    </div>
+    <div class="modal-footer">
+      <a class="btn-wsp" id="btn-wsp" href="#" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.86L0 24l6.302-1.51A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.895 0-3.67-.513-5.19-1.407l-.371-.22-3.742.896.937-3.649-.241-.378A9.967 9.967 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+        WhatsApp
+      </a>
+      <button class="btn-cerrar-caso" id="btn-cerrar-caso" onclick="cerrarCaso()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Marcar como cerrado
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="./js/dashboard.js"></script>
+
+</body>
+</html>

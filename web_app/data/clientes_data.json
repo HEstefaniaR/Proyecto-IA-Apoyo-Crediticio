@@ -26,7 +26,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357598"
+    "ultima_sync": "2026-05-30T14:23:22.460711"
   },
   {
     "computed": {},
@@ -55,7 +55,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357618"
+    "ultima_sync": "2026-05-30T14:23:22.460737"
   },
   {
     "computed": {},
@@ -84,7 +84,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357621"
+    "ultima_sync": "2026-05-30T14:23:22.460740"
   },
   {
     "computed": {},
@@ -113,7 +113,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357624"
+    "ultima_sync": "2026-05-30T14:23:22.460743"
   },
   {
     "computed": {},
@@ -142,7 +142,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357626"
+    "ultima_sync": "2026-05-30T14:23:22.460745"
   },
   {
     "computed": {},
@@ -171,7 +171,7 @@
     "estado_api": "OK",
     "top_cooperativa": "SIN OPCION ELEGIBLE",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357629"
+    "ultima_sync": "2026-05-30T14:23:22.460748"
   },
   {
     "computed": {},
@@ -200,7 +200,7 @@
     "estado_api": "OK",
     "top_cooperativa": "EXCELCREDIT",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357631"
+    "ultima_sync": "2026-05-30T14:23:22.460750"
   },
   {
     "computed": {},
@@ -229,7 +229,7 @@
     "estado_api": "ERROR",
     "top_cooperativa": "N/A",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357633"
+    "ultima_sync": "2026-05-30T14:23:22.460753"
   },
   {
     "computed": {},
@@ -258,7 +258,7 @@
     "estado_api": "OK",
     "top_cooperativa": "BUSINESS",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357635"
+    "ultima_sync": "2026-05-30T14:23:22.460755"
   },
   {
     "computed": {},
@@ -287,7 +287,7 @@
     "estado_api": "OK",
     "top_cooperativa": "EXCELCREDIT",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357638"
+    "ultima_sync": "2026-05-30T14:23:22.460757"
   },
   {
     "computed": {},
@@ -316,6 +316,6 @@
     "estado_api": "OK",
     "top_cooperativa": "SIN OPCION ELEGIBLE",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T14:08:07.357640"
+    "ultima_sync": "2026-05-30T14:23:22.460760"
   }
 ]

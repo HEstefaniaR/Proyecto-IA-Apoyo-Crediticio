@@ -424,3 +424,80 @@ main {
   main { padding: 1rem .75rem; }
   .cards-grid { grid-template-columns: 1fr; }
 }
+
+/* ══════════════════════════════════════════
+   SELECTOR DE ASESOR — modal footer
+══════════════════════════════════════════ */
+.asesor-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.asesor-select-label {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  white-space: nowrap;
+}
+
+.asesor-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--blanco);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235c6a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .75rem center;
+  border: 1.5px solid var(--gris-borde);
+  border-radius: 10px;
+  padding: .45rem 2.2rem .45rem .85rem;
+  font-size: .8rem;
+  font-weight: 500;
+  color: var(--texto);
+  cursor: pointer;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background-color .2s;
+  min-width: 160px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.asesor-select:hover {
+  border-color: var(--azul-claro);
+  background-color: #f8faff;
+}
+
+.asesor-select:focus {
+  border-color: var(--azul-claro);
+  box-shadow: 0 0 0 3px rgba(30, 63, 168, .12);
+}
+
+/* Opción sin asignar — tono diferente */
+.asesor-select option[value=""] {
+  color: var(--texto-suave);
+  font-style: italic;
+}
+
+/* Chip de asesor en tarjeta */
+.asesor-chip {
+  font-size: .68rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(13,32,84,.07), rgba(30,63,168,.1));
+  color: var(--azul-medio);
+  border: 1px solid rgba(30,63,168,.18);
+  border-radius: 6px;
+  padding: .2rem .6rem;
+  white-space: nowrap;
+  letter-spacing: .02em;
+}
+
+/* Botón ganado */
+.btn-ganado {
+  background: var(--verde) !important;
+}
+.btn-ganado:hover {
+  background: #15803d !important;
+}

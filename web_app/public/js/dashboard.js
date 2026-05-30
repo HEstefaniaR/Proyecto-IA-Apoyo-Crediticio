@@ -1,7 +1,5 @@
 // ═══════════════════════════════════════════════════════
-//  CONFIGURACIÓN — se inyecta desde el servidor vía
-//  window.APP_CONFIG (ver dashboard.html) o variables de entorno.
-//  Nunca hardcodear credenciales aquí.
+//  CONFIGURACIÓN
 // ═══════════════════════════════════════════════════════
 const API_URL = (window.APP_CONFIG?.apiUrl || 'http://localhost:5001').replace(/\/$/, '');
 
@@ -11,6 +9,10 @@ let clientesData    = {};
 let cerradosSet     = new Set(JSON.parse(localStorage.getItem('cerrados') || '[]'));
 let mostrarCerrados = false;
 let clienteActivo   = null;
+let asesoresMap     = JSON.parse(localStorage.getItem('asesoresMap') || '{}');
+let filtroAsesor    = 'all';
+const ASESORES      = ['Maryory Rojas', 'Nicol Pérez'];
+let cerradosMotivo  = JSON.parse(localStorage.getItem('cerradosMotivo') || '{}');
 
 // ═══════════════════════════════════════════════════════
 //  CARGA DE CLIENTES
@@ -24,6 +26,16 @@ async function cargarClientes() {
     </div>`;
 
   try {
+    // Cargar asesores del servidor y hacer merge con localStorage
+    try {
+      const resA = await fetch(`${API_URL}/api/asesores`);
+      const dataA = await resA.json();
+      const asesoresServidor = dataA.asesores || {};
+      asesoresMap = { ...asesoresMap, ...asesoresServidor };
+    } catch(e) {
+      console.warn('No se pudo cargar asesores del servidor, usando localStorage:', e);
+    }
+
     const res = await fetch(`${API_URL}/api/perfilar_cliente`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
@@ -44,12 +56,10 @@ async function cargarClientes() {
 
     todosClientes = data.clientes;
 
-    // Poblar clientesData para acceso rápido por cédula
     todosClientes.forEach(c => {
       if (c.prediccion) clientesData[String(c.cedula)] = c.prediccion;
     });
 
-    // Restaurar cerrados que vengan del servidor
     const cerradosServidor = todosClientes
       .filter(c => c.cerrado)
       .map(c => String(c.cedula));
@@ -81,10 +91,14 @@ function nivelColor(prob) {
   return 'low';
 }
 
-/** Construye la lista ordenada por probabilidad descendente */
 function buildLista() {
   return todosClientes
     .map(c => ({ cliente: c, resultado: clientesData[String(c.cedula)] || null }))
+    .filter(({ cliente }) => {
+      if (filtroAsesor === 'all') return true;
+      if (filtroAsesor === 'sin_asignar') return !asesoresMap[String(cliente.cedula)];
+      return asesoresMap[String(cliente.cedula)] === filtroAsesor;
+    })
     .sort((a, b) => (b.resultado?.prob_aprobacion ?? 0) - (a.resultado?.prob_aprobacion ?? 0));
 }
 
@@ -124,6 +138,7 @@ function renderTarjetas(lista, filtro = 'all', busqueda = '') {
     const celular = cliente.celular || '';
     const monto   = resultado ? `$${Number(cliente.monto).toLocaleString('es-CO')}` : '—';
     const plazo   = resultado ? `${cliente.plazo} meses` : '—';
+    const asesorNombre = asesoresMap[String(cliente.cedula)];
 
     card.innerHTML = `
       <div class="card-stripe ${nivel}"></div>
@@ -154,7 +169,7 @@ function renderTarjetas(lista, filtro = 'all', busqueda = '') {
             </svg>
             ${plazo}
           </span>
-          ${esCerrado ? '<span class="info-chip" style="color:#16a34a;background:#dcfce7;">✓ Cerrado</span>' : ''}
+          ${esCerrado ? `<span class="info-chip" style="color:#16a34a;background:#dcfce7;">✓ ${cerradosMotivo[String(cliente.cedula)] === 'ganado' ? 'Ganado' : 'Cerrado'}</span>` : ''}
         </div>
         <div class="prob-bar-wrap">
           <div class="prob-bar-bg">
@@ -168,7 +183,10 @@ function renderTarjetas(lista, filtro = 'all', busqueda = '') {
             </svg>
             ${celular || 'Sin teléfono'}
           </a>
-          <button class="btn-ver" onclick="abrirModal('${cliente.cedula}')">Ver detalle</button>
+          <div style="display:flex;gap:.4rem;align-items:center;">
+            ${asesorNombre ? `<span class="asesor-chip">${asesorNombre.split(' ')[0]}</span>` : ''}
+            <button class="btn-ver" onclick="abrirModal('${cliente.cedula}')">Ver detalle</button>
+          </div>
         </div>
       </div>`;
 
@@ -188,92 +206,104 @@ function abrirModal(cedula) {
   if (!clienteActivo) return;
 
   const resultado = clientesData[String(cedula)];
-  document.getElementById('modal-nombre').textContent    = clienteActivo.nombre?.toUpperCase() || '—';
+  document.getElementById('modal-nombre').textContent     = clienteActivo.nombre?.toUpperCase() || '—';
   document.getElementById('modal-cedula-sub').textContent = `CC ${cedula} · ${clienteActivo.pagaduria?.toUpperCase() || ''}`;
-
-  const celular = clienteActivo.celular || '';
-  document.getElementById('btn-wsp').href = `https://wa.me/57${celular}`;
 
   const body = document.getElementById('modal-body');
 
   if (!resultado) {
-    body.innerHTML = `<div class="error-box"><strong>Sin resultado del modelo</strong>No se pudo obtener el análisis para este cliente. Verifica que la API Flask esté corriendo.</div>`;
-    document.getElementById('modal-overlay').classList.add('open');
-    return;
+    body.innerHTML = `<div class="error-box"><strong>Sin resultado del modelo</strong>No se pudo obtener el análisis para este cliente.</div>`;
+  } else {
+    const prob   = resultado.prob_aprobacion;
+    const nivel  = nivelColor(prob);
+    const hist   = resultado.historial_cliente || {};
+    const rank   = resultado.ranking_cooperativas || [];
+    const mejor  = resultado.mejor_opcion_elegible;
+
+    body.innerHTML = `
+      <div class="section-title">Datos del cliente</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-key">Nombre</div><div class="info-val">${clienteActivo.nombre?.toUpperCase()}</div></div>
+        <div class="info-item"><div class="info-key">Cédula</div><div class="info-val">${cedula}</div></div>
+        <div class="info-item"><div class="info-key">Edad</div><div class="info-val">${clienteActivo.edad} años</div></div>
+        <div class="info-item"><div class="info-key">Celular</div><div class="info-val">${clienteActivo.celular || '—'}</div></div>
+        <div class="info-item"><div class="info-key">Pagaduría</div><div class="info-val">${clienteActivo.pagaduria?.toUpperCase() || '—'}</div></div>
+        <div class="info-item"><div class="info-key">Tipo de crédito</div><div class="info-val">${clienteActivo.tipo_credito?.toUpperCase() || '—'}</div></div>
+        <div class="info-item"><div class="info-key">Monto solicitado</div><div class="info-val">$${Number(clienteActivo.monto).toLocaleString('es-CO')}</div></div>
+        <div class="info-item"><div class="info-key">Plazo</div><div class="info-val">${clienteActivo.plazo} meses</div></div>
+      </div>
+
+      <div class="section-title">Historial en BD</div>
+      <div class="historial-chips">
+        <div class="h-chip">
+          <div class="h-chip-label">Estado</div>
+          <div class="h-chip-val" style="font-size:.85rem;">${hist.es_cliente_nuevo ? '🆕 Nuevo' : '✅ Antiguo'}</div>
+        </div>
+        <div class="h-chip">
+          <div class="h-chip-label">Créditos previos</div>
+          <div class="h-chip-val">${hist.num_creditos_totales ?? '—'}</div>
+        </div>
+        <div class="h-chip">
+          <div class="h-chip-label">Días desde último</div>
+          <div class="h-chip-val">${hist.dias_desde_ultimo_credito >= 9999 ? '—' : hist.dias_desde_ultimo_credito + 'd'}</div>
+        </div>
+      </div>
+
+      <div class="section-title">Modelo 1 — Viabilidad de aprobación</div>
+      <div class="m1-block">
+        <div class="m1-circle ${nivel}">
+          <div class="m1-pct ${nivel}">${prob.toFixed(1)}%</div>
+          <div class="m1-sub">viab.</div>
+        </div>
+        <div class="m1-desc">
+          <h4>${nivel === 'high' ? 'Alta viabilidad' : nivel === 'medium' ? 'Viabilidad media' : 'Baja viabilidad'}</h4>
+          <p>${
+            nivel === 'high'
+              ? 'El perfil del cliente tiene alta probabilidad de aprobación. Priorizar gestión.'
+              : nivel === 'medium'
+              ? 'Perfil con viabilidad moderada. Evaluar cooperativas disponibles.'
+              : 'Perfil con baja probabilidad. Revisar condiciones y posibles alternativas.'
+          }</p>
+          ${mejor ? `<p style="margin-top:.4rem;font-size:.75rem;color:var(--azul);">✦ Mejor opción elegible: <strong>${mejor.cooperativa}</strong> (${mejor.prob_ml}% confianza)</p>` : ''}
+        </div>
+      </div>
+
+      <div class="section-title">Modelo 2 — Ranking de cooperativas</div>
+      <div class="coop-list">
+        ${rank.slice(0, 5).map((c, i) => `
+          <div class="coop-item">
+            <div class="coop-rank ${i === 0 ? 'gold' : ''}">${i + 1}</div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                <span class="coop-name">${c.cooperativa}</span>
+                <span class="coop-elegible ${c.elegible_reglas ? 'ok' : 'no'}">${c.elegible_reglas ? '✓ Elegible' : '✗ No elegible'}</span>
+              </div>
+              ${!c.elegible_reglas && c.razones_rechazo?.length
+                ? `<div class="coop-razones">${c.razones_rechazo.join(' · ')}</div>`
+                : ''}
+            </div>
+            <div class="coop-bar-wrap"><div class="coop-bar-fill" style="width:${c.prob_ml}%"></div></div>
+            <div class="coop-pct">${c.prob_ml}%</div>
+          </div>`).join('')}
+      </div>`;
   }
 
-  const prob   = resultado.prob_aprobacion;
-  const nivel  = nivelColor(prob);
-  const hist   = resultado.historial_cliente || {};
-  const rank   = resultado.ranking_cooperativas || [];
-  const mejor  = resultado.mejor_opcion_elegible;
-
-  body.innerHTML = `
-    <div class="section-title">Datos del cliente</div>
-    <div class="info-grid">
-      <div class="info-item"><div class="info-key">Nombre</div><div class="info-val">${clienteActivo.nombre?.toUpperCase()}</div></div>
-      <div class="info-item"><div class="info-key">Cédula</div><div class="info-val">${cedula}</div></div>
-      <div class="info-item"><div class="info-key">Edad</div><div class="info-val">${clienteActivo.edad} años</div></div>
-      <div class="info-item"><div class="info-key">Celular</div><div class="info-val">${celular || '—'}</div></div>
-      <div class="info-item"><div class="info-key">Pagaduría</div><div class="info-val">${clienteActivo.pagaduria?.toUpperCase() || '—'}</div></div>
-      <div class="info-item"><div class="info-key">Tipo de crédito</div><div class="info-val">${clienteActivo.tipo_credito?.toUpperCase() || '—'}</div></div>
-      <div class="info-item"><div class="info-key">Monto solicitado</div><div class="info-val">$${Number(clienteActivo.monto).toLocaleString('es-CO')}</div></div>
-      <div class="info-item"><div class="info-key">Plazo</div><div class="info-val">${clienteActivo.plazo} meses</div></div>
+  // Footer dinámico
+  const asesorActual = asesoresMap[String(cedula)] || '';
+  document.getElementById('modal-footer-content').innerHTML = `
+    <div class="asesor-select-wrap">
+      <span class="asesor-select-label">Asesor:</span>
+      <select id="select-asesor" class="asesor-select" onchange="asignarAsesor('${cedula}', this.value)">
+        <option value="">— Sin asignar —</option>
+        ${ASESORES.map(a => `<option value="${a}" ${asesorActual === a ? 'selected' : ''}>${a}</option>`).join('')}
+      </select>
     </div>
-
-    <div class="section-title">Historial en BD</div>
-    <div class="historial-chips">
-      <div class="h-chip">
-        <div class="h-chip-label">Estado</div>
-        <div class="h-chip-val" style="font-size:.85rem;">${hist.es_cliente_nuevo ? '🆕 Nuevo' : '✅ Antiguo'}</div>
-      </div>
-      <div class="h-chip">
-        <div class="h-chip-label">Créditos previos</div>
-        <div class="h-chip-val">${hist.num_creditos_totales ?? '—'}</div>
-      </div>
-      <div class="h-chip">
-        <div class="h-chip-label">Días desde último</div>
-        <div class="h-chip-val">${hist.dias_desde_ultimo_credito >= 9999 ? '—' : hist.dias_desde_ultimo_credito + 'd'}</div>
-      </div>
-    </div>
-
-    <div class="section-title">Modelo 1 — Viabilidad de aprobación</div>
-    <div class="m1-block">
-      <div class="m1-circle ${nivel}">
-        <div class="m1-pct ${nivel}">${prob.toFixed(1)}%</div>
-        <div class="m1-sub">viab.</div>
-      </div>
-      <div class="m1-desc">
-        <h4>${nivel === 'high' ? 'Alta viabilidad' : nivel === 'medium' ? 'Viabilidad media' : 'Baja viabilidad'}</h4>
-        <p>${
-          nivel === 'high'
-            ? 'El perfil del cliente tiene alta probabilidad de aprobación. Priorizar gestión.'
-            : nivel === 'medium'
-            ? 'Perfil con viabilidad moderada. Evaluar cooperativas disponibles.'
-            : 'Perfil con baja probabilidad. Revisar condiciones y posibles alternativas.'
-        }</p>
-        ${mejor ? `<p style="margin-top:.4rem;font-size:.75rem;color:var(--azul);">✦ Mejor opción elegible: <strong>${mejor.cooperativa}</strong> (${mejor.prob_ml}% confianza)</p>` : ''}
-      </div>
-    </div>
-
-    <div class="section-title">Modelo 2 — Ranking de cooperativas</div>
-    <div class="coop-list">
-      ${rank.slice(0, 5).map((c, i) => `
-        <div class="coop-item">
-          <div class="coop-rank ${i === 0 ? 'gold' : ''}">${i + 1}</div>
-          <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
-              <span class="coop-name">${c.cooperativa}</span>
-              <span class="coop-elegible ${c.elegible_reglas ? 'ok' : 'no'}">${c.elegible_reglas ? '✓ Elegible' : '✗ No elegible'}</span>
-            </div>
-            ${!c.elegible_reglas && c.razones_rechazo?.length
-              ? `<div class="coop-razones">${c.razones_rechazo.join(' · ')}</div>`
-              : ''}
-          </div>
-          <div class="coop-bar-wrap"><div class="coop-bar-fill" style="width:${c.prob_ml}%"></div></div>
-          <div class="coop-pct">${c.prob_ml}%</div>
-        </div>`).join('')}
-    </div>`;
+    <a class="btn-wsp" href="https://wa.me/57${clienteActivo.celular || ''}" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.99.574 3.842 1.564 5.407L2 22l4.737-1.543A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 11.999 2zm0 18a7.95 7.95 0 01-4.07-1.115l-.291-.174-3.019.983.899-3.049-.19-.311A7.96 7.96 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>
+      WhatsApp
+    </a>
+    <button class="btn-cerrar-caso btn-ganado" onclick="cerrarCaso('ganado')">✓ Ganado</button>
+    <button class="btn-cerrar-caso" onclick="cerrarCaso('perdido')">✗ Perdido</button>`;
 
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -290,19 +320,24 @@ function cerrarModalSiFondo(e) {
 // ═══════════════════════════════════════════════════════
 //  CERRAR CASO
 // ═══════════════════════════════════════════════════════
-async function cerrarCaso() {
+async function cerrarCaso(motivo = 'perdido') {
   if (!clienteActivo) return;
   const cedula = String(clienteActivo.cedula);
 
-  // Notificar al servidor
   try {
-    await fetch(`${API_URL}/api/cliente/${cedula}/cerrar`, { method: 'POST' });
+    await fetch(`${API_URL}/api/cliente/${cedula}/cerrar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ motivo })
+    });
   } catch (e) {
     console.warn('No se pudo notificar al servidor:', e);
   }
 
   cerradosSet.add(cedula);
+  cerradosMotivo[cedula] = motivo;
   localStorage.setItem('cerrados', JSON.stringify([...cerradosSet]));
+  localStorage.setItem('cerradosMotivo', JSON.stringify(cerradosMotivo));
 
   const card = document.querySelector(`.client-card[data-cedula="${cedula}"]`);
   if (card) {
@@ -331,6 +366,13 @@ function toggleCerrados() {
   filtrarTarjetas();
 }
 
+function filtrarPorAsesor(val) {
+  filtroAsesor = val;
+  renderTarjetas(buildLista(),
+    document.getElementById('filter-select').value,
+    document.getElementById('search-input').value);
+}
+
 // ═══════════════════════════════════════════════════════
 //  STATS
 // ═══════════════════════════════════════════════════════
@@ -342,14 +384,53 @@ function actualizarStats(lista) {
     return p >= 40 && p < 70;
   }).length;
 
+  const ganados  = [...cerradosSet].filter(c => cerradosMotivo[c] === 'ganado').length;
+  const perdidos = [...cerradosSet].filter(c => cerradosMotivo[c] === 'perdido').length;
+
   document.getElementById('stat-cola').textContent     = activos.length;
   document.getElementById('stat-alta').textContent     = alta;
   document.getElementById('stat-media').textContent    = media;
   document.getElementById('stat-cerrados').textContent = cerradosSet.size;
   document.getElementById('badge-total').textContent   = `${activos.length} clientes activos`;
+
+  const elG = document.getElementById('stat-ganados');
+  const elP = document.getElementById('stat-perdidos');
+  if (elG) elG.textContent = ganados;
+  if (elP) elP.textContent = perdidos;
 }
 
 // ═══════════════════════════════════════════════════════
-//  INIT — cargar al arrancar
+//  ASESOR
+// ═══════════════════════════════════════════════════════
+async function asignarAsesor(cedula, asesor) {
+  asesoresMap[cedula] = asesor;
+  localStorage.setItem('asesoresMap', JSON.stringify(asesoresMap));
+  try {
+    await fetch(`${API_URL}/api/cliente/${cedula}/asesor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ asesor })
+    });
+  } catch(e) { console.warn('No se pudo guardar asesor en servidor:', e); }
+
+  const card = document.querySelector(`.client-card[data-cedula="${cedula}"]`);
+  if (card) {
+    const footer = card.querySelector('.card-footer > div');
+    if (footer) {
+      const existingChip = footer.querySelector('.asesor-chip');
+      if (existingChip) existingChip.remove();
+      if (asesor) {
+        const chip = document.createElement('span');
+        chip.className = 'asesor-chip';
+        chip.textContent = asesor.split(' ')[0];
+        footer.insertBefore(chip, footer.firstChild);
+      }
+    }
+  }
+  actualizarStats(buildLista());
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
 // ═══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', cargarClientes);

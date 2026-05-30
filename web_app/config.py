@@ -25,7 +25,7 @@ CORS_ENABLED = os.getenv('CORS_ENABLED', 'true').lower() == 'true'
 
 # Rutas modelos
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BD_PATH = os.path.abspath(os.path.join(BASE_DIR, '..', 'data', 'bd_IA.xlsx'))
+BD_PATH = os.path.join(BASE_DIR, 'bd', 'bd_IA.xlsx')
 MODELO1_PATH = os.path.join(BASE_DIR, 'modelos', 'modelo1_random_forest.pkl')
 MODELO2_PATH = os.path.join(BASE_DIR, 'modelos', 'modelo2_XGBoost.pkl')
 

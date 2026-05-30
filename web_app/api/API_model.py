@@ -44,44 +44,56 @@ try:
 except Exception as e:
     print(f"✗ Error cargando modelos: {e}")
 
-# ===== FUNCIONES INTERNAS (igual que antes) =====
-
+# ===== FUNCIONES INTERNAS =====
+# ===== FUNCIONES INTERNAS =====
 def buscar_historial_cliente(cedula):
     try:
         df_bd = pd.read_excel(BD_PATH)
         df_bd.columns = df_bd.columns.str.strip().str.upper()
-        
+
         target_col = 'ID_CLIENTE'
         if target_col not in df_bd.columns:
             return {'dias_desde_ultimo_credito': 9999, 'num_creditos_totales': 0, 'es_cliente_nuevo': True}
 
-        df_bd[target_col] = df_bd[target_col].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
-        cedula_str = str(cedula).replace('.0', '').strip()
-        
-        cliente = df_bd[df_bd[target_col] == cedula_str]
-        
+        # Normalizar: convertir todo a string entero sin decimales
+        def normalizar(val):
+            try:
+                return str(int(float(str(val).strip())))
+            except Exception:
+                return str(val).strip().upper()
+
+        df_bd[target_col] = df_bd[target_col].apply(normalizar)
+        cedula_norm = normalizar(cedula)
+
+        cliente = df_bd[df_bd[target_col] == cedula_norm]
+
         if cliente.empty:
             return {'dias_desde_ultimo_credito': 9999, 'num_creditos_totales': 0, 'es_cliente_nuevo': True}
-        
+
         num_creditos = len(cliente)
-        
         col_fecha = next((c for c in ['FECHA', 'FECHA_CREDITO', 'FECHA_DESEMBOLSO'] if c in df_bd.columns), None)
-        
+
         if col_fecha:
-            ultima_fecha = pd.to_datetime(cliente[col_fecha]).max()
-            dias_desde_ultimo = (datetime.now() - ultima_fecha).days
+            ultima_fecha = pd.to_datetime(cliente[col_fecha], errors='coerce').max()
+            if pd.isna(ultima_fecha):
+                dias_desde_ultimo = 9999
+            else:
+                dias_desde_ultimo = (datetime.now() - ultima_fecha).days
         else:
-            dias_desde_ultimo = 999999
+            dias_desde_ultimo = 9999
 
         return {
             'dias_desde_ultimo_credito': int(dias_desde_ultimo),
             'num_creditos_totales': int(num_creditos),
             'es_cliente_nuevo': False
         }
-        
+
     except Exception as e:
-        print(f"Error en buscar_historial_cliente: {e}")
+        # Solo dejamos este print en caso de que ocurra un error real con el archivo
+        print(f"[BD ERROR] Excepción en buscar_historial_cliente: {e}")
         return {'dias_desde_ultimo_credito': 9999, 'num_creditos_totales': 0, 'es_cliente_nuevo': True}
+
+
 
 PAGADURIAS_PENSION = {'COLPENSIONES', 'ARP POSITIVA', 'FOPEP', 'FIDUPREVISORA', 'EJERCITO NACIONAL'}
 
@@ -281,16 +293,34 @@ def obtener_clientes():
 
 @app.route('/api/cliente/<cedula>/cerrar', methods=['POST'])
 def cerrar_cliente(cedula):
-    """
-    POST /api/cliente/{cedula}/cerrar
-    
-    Marca un cliente como cerrado
-    """
     try:
+        data = request.get_json(silent=True) or {}
+        motivo = data.get('motivo', 'perdido')  # 'perdido' o 'ganado'
         if bp_handler.marcar_cerrado(cedula):
-            return jsonify({'status': 'ok', 'mensaje': f'Cliente {cedula} cerrado'}), 200
+            return jsonify({'status': 'ok', 'mensaje': f'Cliente {cedula} cerrado ({motivo})', 'motivo': motivo}), 200
         else:
             return jsonify({'error': 'Cliente no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cliente/<cedula>/asesor', methods=['POST'])
+def asignar_asesor(cedula):
+    try:
+        data = request.get_json(silent=True) or {}
+        asesor = data.get('asesor', '')
+        # Guardar en memoria (o puedes persistir en un archivo/BD)
+        if not hasattr(app, 'asesores'):
+            app.asesores = {}
+        app.asesores[cedula] = asesor
+        return jsonify({'status': 'ok', 'cedula': cedula, 'asesor': asesor}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/asesores', methods=['GET'])
+def obtener_asesores():
+    try:
+        asesores = getattr(app, 'asesores', {})
+        return jsonify({'status': 'ok', 'asesores': asesores}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

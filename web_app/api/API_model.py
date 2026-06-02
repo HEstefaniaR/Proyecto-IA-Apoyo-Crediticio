@@ -246,7 +246,8 @@ def perfilar_cliente():
                     'pagaduria': cliente.get('pagaduria'),
                     'cerrado': cliente.get('cerrado', False),
                     'ultima_sync': cliente.get('ultima_sync'),
-                    'prediccion': resultado
+                    'prediccion': resultado,
+                    'createdAt': cliente.get('createdAt', ''), 
                 })
                 
                 print(f"  ✓ [{i}/{len(clientes_raw)}] {nombre} ({cedula}) → {resultado['prob_aprobacion']}%")

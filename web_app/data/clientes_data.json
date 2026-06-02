@@ -26,7 +26,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299341"
+    "ultima_sync": "2026-06-01T17:23:32.112749"
   },
   {
     "computed": {},
@@ -55,7 +55,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299387"
+    "ultima_sync": "2026-06-01T17:23:32.112769"
   },
   {
     "computed": {},
@@ -84,7 +84,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299390"
+    "ultima_sync": "2026-06-01T17:23:32.112774"
   },
   {
     "computed": {},
@@ -113,7 +113,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299393"
+    "ultima_sync": "2026-06-01T17:23:32.112777"
   },
   {
     "computed": {},
@@ -142,7 +142,7 @@
     "estado_api": null,
     "top_cooperativa": null,
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299404"
+    "ultima_sync": "2026-06-01T17:23:32.112780"
   },
   {
     "computed": {},
@@ -171,7 +171,7 @@
     "estado_api": "OK",
     "top_cooperativa": "SIN OPCION ELEGIBLE",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299406"
+    "ultima_sync": "2026-06-01T17:23:32.112783"
   },
   {
     "computed": {},
@@ -200,7 +200,7 @@
     "estado_api": "OK",
     "top_cooperativa": "EXCELCREDIT",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299409"
+    "ultima_sync": "2026-06-01T17:23:32.112786"
   },
   {
     "computed": {},
@@ -229,7 +229,7 @@
     "estado_api": "ERROR",
     "top_cooperativa": "N/A",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299419"
+    "ultima_sync": "2026-06-01T17:23:32.112789"
   },
   {
     "computed": {},
@@ -258,7 +258,7 @@
     "estado_api": "OK",
     "top_cooperativa": "BUSINESS",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299431"
+    "ultima_sync": "2026-06-01T17:23:32.112792"
   },
   {
     "computed": {},
@@ -287,7 +287,7 @@
     "estado_api": "OK",
     "top_cooperativa": "EXCELCREDIT",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299434"
+    "ultima_sync": "2026-06-01T17:23:32.112795"
   },
   {
     "computed": {},
@@ -316,7 +316,7 @@
     "estado_api": "OK",
     "top_cooperativa": "SIN OPCION ELEGIBLE",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299438"
+    "ultima_sync": "2026-06-01T17:23:32.112798"
   },
   {
     "computed": {},
@@ -345,7 +345,7 @@
     "estado_api": "ERROR",
     "top_cooperativa": "N/A",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299441"
+    "ultima_sync": "2026-06-01T17:23:32.112801"
   },
   {
     "computed": {},
@@ -374,7 +374,7 @@
     "estado_api": "ERROR",
     "top_cooperativa": "N/A",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299443"
+    "ultima_sync": "2026-06-01T17:23:32.112804"
   },
   {
     "computed": {},
@@ -403,6 +403,64 @@
     "estado_api": "ERROR",
     "top_cooperativa": "N/A",
     "cerrado": false,
-    "ultima_sync": "2026-05-30T17:06:30.299446"
+    "ultima_sync": "2026-06-01T17:23:32.112807"
+  },
+  {
+    "computed": {},
+    "stale": [],
+    "id": 31,
+    "createdAt": "2026-06-01T21:31:11.375Z",
+    "updatedAt": "2026-06-01T21:31:11.375Z",
+    "nombre": "Andrea Zuñiga",
+    "celular": "3053506789",
+    "monto": "4000000",
+    "tipo_credito": "refinanciacion",
+    "tipo_cliente": "pensionado",
+    "plazo": "24",
+    "edad": "69",
+    "pagaduria": "Colpensiones",
+    "cedula": "66789446",
+    "viabilidad_pct": 0,
+    "decision_credito": "ERROR_API",
+    "top_confianza": 0,
+    "razon_recomendacion": "Request failed with status code 404",
+    "modelo2_top_original": "N/A",
+    "modelo2_confianza_original": null,
+    "modelo2_elegible_original": false,
+    "modelo2_razon_original": "Request failed with status code 404",
+    "perfil_completo": " {\"error\":\"Request failed with status code 404\",\"payload_enviado\":{\"nombre\":\"Andrea Zuñiga\",\"cedula\":\"66789446\",\"celular\":\"3053506789\",\"edad\":69,\"monto\":4000000,\"plazo\":24,\"tipo_credito\":\"refinanciacion\",\"pagaduria\":\"Colpensiones\",\"dias_ultimo_credito\":0,\"num_creditos_totales\":1},\"variables_recibidas\":{\"nombre\":\"Andrea Zuñiga\",\"cedula\":\"66789446\",\"celular\":\"3053506789\",\"edad\":\"69\",\"monto\":\"4000000\",\"plazo\":\"24\",\"tipo_credito\":\"refinanciacion\",\"pagaduria\":\"Colpensiones\"}}",
+    "estado_api": "ERROR",
+    "top_cooperativa": "N/A",
+    "cerrado": false,
+    "ultima_sync": "2026-06-01T17:23:32.112810"
+  },
+  {
+    "computed": {},
+    "stale": [],
+    "id": 32,
+    "createdAt": "2026-06-01T21:34:59.122Z",
+    "updatedAt": "2026-06-01T21:34:59.122Z",
+    "nombre": "Felipe Muñoz",
+    "celular": "3138221125",
+    "monto": "50000000",
+    "tipo_credito": "compra de cartera",
+    "tipo_cliente": "activo_publico",
+    "plazo": "78",
+    "edad": "70",
+    "pagaduria": "Colpensiones",
+    "cedula": "77845335",
+    "viabilidad_pct": 0,
+    "decision_credito": "ERROR_API",
+    "top_confianza": 0,
+    "razon_recomendacion": "Request failed with status code 404",
+    "modelo2_top_original": "N/A",
+    "modelo2_confianza_original": null,
+    "modelo2_elegible_original": false,
+    "modelo2_razon_original": "Request failed with status code 404",
+    "perfil_completo": " {\"error\":\"Request failed with status code 404\",\"payload_enviado\":{\"nombre\":\"Felipe Muñoz\",\"cedula\":\"77845335\",\"celular\":\"3138221125\",\"edad\":70,\"monto\":50000000,\"plazo\":78,\"tipo_credito\":\"compra de cartera\",\"pagaduria\":\"Colpensiones\",\"dias_ultimo_credito\":0,\"num_creditos_totales\":1},\"variables_recibidas\":{\"nombre\":\"Felipe Muñoz\",\"cedula\":\"77845335\",\"celular\":\"3138221125\",\"edad\":\"70\",\"monto\":\"50000000\",\"plazo\":\"78\",\"tipo_credito\":\"compra de cartera\",\"pagaduria\":\"Colpensiones\"}}",
+    "estado_api": "ERROR",
+    "top_cooperativa": "N/A",
+    "cerrado": false,
+    "ultima_sync": "2026-06-01T17:23:32.112813"
   }
 ]

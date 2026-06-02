@@ -99,7 +99,13 @@ function buildLista() {
       if (filtroAsesor === 'sin_asignar') return !asesoresMap[String(cliente.cedula)];
       return asesoresMap[String(cliente.cedula)] === filtroAsesor;
     })
-    .sort((a, b) => (b.resultado?.prob_aprobacion ?? 0) - (a.resultado?.prob_aprobacion ?? 0));
+    .sort((a, b) => {
+      const orden = document.getElementById('filter-orden')?.value ?? 'llegada';
+      if (orden === 'llegada') {
+        return new Date(a.cliente.createdAt) - new Date(b.cliente.createdAt);
+      }
+      return (b.resultado?.prob_aprobacion ?? 0) - (a.resultado?.prob_aprobacion ?? 0);
+    });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -168,6 +174,15 @@ function renderTarjetas(lista, filtro = 'all', busqueda = '') {
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
             ${plazo}
+          </span>
+          <span class="info-chip" title="Fecha de llegada">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            ${cliente.createdAt
+              ? new Date(cliente.createdAt).toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'2-digit' })
+              : '—'}
           </span>
           ${esCerrado ? `<span class="info-chip" style="color:#16a34a;background:#dcfce7;">✓ ${cerradosMotivo[String(cliente.cedula)] === 'ganado' ? 'Ganado' : 'Cerrado'}</span>` : ''}
         </div>

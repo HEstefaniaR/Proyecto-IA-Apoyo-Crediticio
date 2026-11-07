@@ -203,11 +203,17 @@ Proyecto-IA-Apoyo-Crediticio-main/
 ### Arquitectura documentada
 ![Arquitectura del sistema](documentos/diagrama_solucion.png)
 
+La arquitectura del sistema se diseñó de forma modular, separando la captura de información, el procesamiento de datos y la visualización de resultados. Esta organización permite que los componentes funcionen de manera independiente y facilita su mantenimiento o actualización. Además, la aplicación web actúa como punto de integración entre los modelos predictivos y la información recopilada, permitiendo centralizar la lógica de negocio sin depender directamente de la interfaz del chatbot.
+
 ### Integración del chatbot
 ![Diagrama de arquitectura RAG](documentos/diagrama_arquitectura_RAG.png)
 
+Para complementar la captura de información, se diseñó una arquitectura de generación aumentada por recuperación (RAG), orientada a responder consultas utilizando una base de conocimiento documental. Este enfoque contempla la fragmentación de documentos, su transformación en representaciones vectoriales mediante embeddings y la recuperación de contenido relevante para enriquecer las respuestas del modelo de lenguaje. El diagrama representa el diseño de esta integración, cuya configuración conversacional se encuentra asociada al chatbot desarrollado en Botpress.
+
 ### Despliegue
 ![Diagrama de despliegue](documentos/diagrama_despliegue.png)
+
+El despliegue se planteó mediante una infraestructura contenerizada que permite separar la interfaz pública del entorno de trabajo de los asesores. Se utiliza un proxy inverso para gestionar el acceso HTTPS y dirigir las solicitudes hacia los servicios correspondientes. Esta distribución busca facilitar la administración de los componentes y establecer diferentes niveles de acceso, manteniendo el portal de clientes disponible públicamente y restringiendo el acceso al panel de gestión crediticia.
 
 ## Instalación y ejecución local
 

@@ -1,6 +1,6 @@
-cd<div align="center">
+<div align="center">
 
-# 💳 Proyecto IA – Apoyo Crediticio
+# Proyecto IA – Apoyo Crediticio
 
 ### Sistema inteligente de perfilación de clientes y recomendación de cooperativas financieras
 
@@ -17,7 +17,7 @@ cd<div align="center">
 
 ---
 
-## 📌 Descripción
+##  Descripción
 
 **Proyecto IA – Apoyo Crediticio** es un prototipo de apoyo a la gestión comercial de créditos que integra un **chatbot de captura de información**, **modelos de aprendizaje automático**, **reglas de negocio**, una **API REST en Flask** y un **dashboard para asesores**.
 
@@ -25,7 +25,7 @@ Su propósito es facilitar la identificación de oportunidades crediticias y ori
 
 > **Alcance:** las probabilidades son estimaciones de modelos entrenados con datos históricos, no garantías de desembolso ni decisiones oficiales de aprobación. Este proyecto es una herramienta de apoyo y demostración, no un sistema autónomo de otorgamiento de crédito.
 
-## 🎯 Problema y objetivos
+##  Problema y objetivos
 
 En los procesos de asesoría crediticia, la revisión manual de perfiles y condiciones entre múltiples cooperativas puede requerir tiempo y dificultar la priorización de oportunidades comerciales.
 
@@ -37,7 +37,7 @@ Este proyecto busca:
 - **Aplicar criterios de elegibilidad** definidos como reglas de negocio para complementar las predicciones.
 - **Centralizar la información** en un panel para consulta, seguimiento y asignación de asesores.
 
-## 🧠 ¿Cómo funciona?
+## ¿Cómo funciona?
 
 ```mermaid
 flowchart TD
@@ -64,7 +64,7 @@ flowchart TD
 5. El segundo modelo genera un ranking de cooperativas y se contrastan sus resultados con reglas de negocio.
 6. Los resultados se presentan mediante una API y un panel web para asesores.
 
-## ✨ Funcionalidades implementadas
+## Funcionalidades implementadas
 
 ### 1. Perfilación predictiva
 - Cálculo de una probabilidad estimada de desembolso.
@@ -89,7 +89,7 @@ flowchart TD
 - Cierre y reapertura de registros.
 - Asignación de asesores mediante la API (almacenada en memoria del proceso).
 
-## 🛠️ Tecnologías utilizadas
+## Tecnologías utilizadas
 
 | Capa | Tecnologías | Uso principal |
 |---|---|---|
@@ -101,7 +101,7 @@ flowchart TD
 | Persistencia | Excel, CSV, JSON | Información histórica y respaldo local |
 | Modelos serializados | Joblib, Pickle | Carga de artefactos entrenados |
 
-## 📊 Modelos de Machine Learning
+## Modelos de Machine Learning
 
 ### Modelo 1: estimación del desembolso
 
@@ -157,7 +157,7 @@ Las recomendaciones se complementan con restricciones codificadas para las coope
 
 Estas reglas son condiciones implementadas en el prototipo y **no deben interpretarse como políticas vigentes de entidades financieras sin validación externa**.
 
-## 🏗️ Estructura del repositorio
+## Estructura del repositorio
 
 ```text
 Proyecto-IA-Apoyo-Crediticio-main/
@@ -198,7 +198,7 @@ Proyecto-IA-Apoyo-Crediticio-main/
 └── requirements.txt
 ```
 
-## 🖼️ Diagramas del proyecto
+## Diagramas del proyecto
 
 ### Arquitectura documentada
 ![Arquitectura del sistema](documentos/diagrama_solucion.png)
@@ -211,7 +211,7 @@ Proyecto-IA-Apoyo-Crediticio-main/
 
 > El repositorio incluye un diagrama denominado «arquitectura RAG» y una base de conocimiento para el chatbot. Sin embargo, el código Flask revisado no implementa por sí mismo un pipeline RAG; la configuración conversacional corresponde al proyecto exportado de Botpress.
 
-## 🚀 Instalación y ejecución local
+## Instalación y ejecución local
 
 ### Requisitos previos
 
@@ -297,7 +297,7 @@ curl http://127.0.0.1:5001/health
 
 **Nota:** la carga de perfiles reales mediante `POST /api/perfilar_cliente` depende de contar con una tabla accesible en Botpress o registros locales de respaldo. El dashboard puede mostrar resultados distintos si no existen dichos datos.
 
-## 🔌 API REST
+## API REST
 
 | Método | Endpoint | Descripción |
 |---|---|---|
@@ -317,7 +317,7 @@ curl -X POST http://127.0.0.1:5001/api/perfilar_cliente
 
 La respuesta incluye el estado, el total de clientes procesados y, para cada uno, el resultado predictivo, ranking de cooperativas, opción elegible e historial consultado.
 
-## 📚 Análisis y documentación
+## Análisis y documentación
 
 - **Análisis exploratorio:** [`notebooks/EDA.ipynb`](notebooks/EDA.ipynb)
 - **Modelo de desembolso:** [`notebooks/modelo1_mejorado.ipynb`](notebooks/modelo1_mejorado.ipynb)
@@ -325,7 +325,7 @@ La respuesta incluye el estado, el total de clientes procesados y, para cada uno
 - **Documentación gráfica:** [`documentos/`](documentos/)
 - **Chatbot exportado:** [`chatbot_botpress/`](chatbot_botpress/)
 
-## ⚠️ Limitaciones y siguientes pasos
+## Limitaciones y siguientes pasos
 
 Como prototipo académico, el proyecto tiene oportunidades de mejora relevantes:
 
@@ -337,16 +337,11 @@ Como prototipo académico, el proyecto tiene oportunidades de mejora relevantes:
 6. **Uso responsable de IA:** evaluar calibración, sesgos, desempeño por grupos y revisión humana para decisiones que afecten a las personas.
 7. **Seguridad de la API:** incorporar autenticación, autorización, controles de acceso y manejo seguro de información personal antes de una implementación real.
 
-## 🤝 Créditos
+## Créditos
 
 Proyecto desarrollado con fines académicos y de demostración, integrando técnicas de ciencia de datos, machine learning y desarrollo de aplicaciones.
 
-**Autoría y equipo:** agrega aquí los nombres y enlaces de LinkedIn/GitHub de las personas participantes, según corresponda.
-
-## 📄 Licencia
-
-No se identifica un archivo `LICENSE` en la versión revisada. Si deseas permitir reutilización pública del código, define y añade expresamente una licencia apropiada antes de publicarlo.
-
+**Autoría y equipo:** Nicolás Guarán, Estefania Hernández, Natalia Paredes y Mariana Cifuentes.
 ---
 
 <div align="center">

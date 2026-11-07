@@ -209,8 +209,6 @@ Proyecto-IA-Apoyo-Crediticio-main/
 ### Despliegue
 ![Diagrama de despliegue](documentos/diagrama_despliegue.png)
 
-> El repositorio incluye un diagrama denominado «arquitectura RAG» y una base de conocimiento para el chatbot. Sin embargo, el código Flask revisado no implementa por sí mismo un pipeline RAG; la configuración conversacional corresponde al proyecto exportado de Botpress.
-
 ## Instalación y ejecución local
 
 ### Requisitos previos
